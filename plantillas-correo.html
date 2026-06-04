@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plantillas</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f3ef;--surface:#fff;--border:#dddbd3;--border-s:#b0ada4;
+  --text:#181714;--muted:#6e6b62;
+  --info-bg:#eef4fb;--info:#1a5a8a;
+  --danger:#b93030;--success:#1a7a4a;
+  --warn:#a05c00;--warn-bg:#fff8ee;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+.shell{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{background:var(--text);color:#fff;display:flex;align-items:center;gap:12px;padding:0 1.25rem;height:48px;flex-shrink:0}
+.topbar h1{font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:.05em;flex:1}
+.topbar-hint{font-size:11px;color:rgba(255,255,255,.4);font-family:var(--mono)}
+.btn-add{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;font-size:12px;font-family:var(--sans);padding:5px 12px;border-radius:3px;cursor:pointer;display:flex;align-items:center;gap:5px}
+.btn-add:hover{background:rgba(255,255,255,.1)}
+.body{display:flex;flex:1;overflow:hidden}
+.sidebar{width:200px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:10px 0}
+.sb-label{font-size:10px;font-family:var(--mono);color:var(--muted);padding:0 14px 6px;letter-spacing:.08em;text-transform:uppercase}
+.sb-item{display:flex;align-items:center;padding:7px 14px;font-size:13px;color:var(--muted);cursor:pointer;border-left:2px solid transparent;background:none;border-top:none;border-right:none;border-bottom:none;width:100%;text-align:left;font-family:var(--sans)}
+.sb-item:hover{color:var(--text);background:var(--bg)}
+.sb-item.active{color:var(--text);border-left-color:var(--text);font-weight:500;background:var(--bg)}
+.sb-count{font-family:var(--mono);font-size:11px;color:var(--border-s);margin-left:auto}
+.main{flex:1;overflow-y:auto;padding:1.25rem}
+.search-row{display:flex;gap:8px;margin-bottom:1rem}
+.search-wrap{flex:1;position:relative}
+.search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.search-wrap kbd{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:10px;font-family:var(--mono);color:var(--border-s);background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:1px 5px}
+#q{width:100%;padding:7px 36px 7px 30px;border:1px solid var(--border);border-radius:4px;font-size:13px;font-family:var(--sans);background:var(--surface);color:var(--text)}
+#q:focus{outline:none;border-color:var(--border-s)}
+#q:focus+kbd{display:none}
+.result-count{font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:.75rem}
+.grid{display:flex;flex-direction:column;gap:6px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:5px;transition:border-color .1s}
+.card:hover{border-color:var(--border-s)}
+.card-top{display:flex;align-items:stretch;min-height:48px}
+.card-title-btn{flex:1;text-align:left;padding:10px 12px;font-size:13px;font-weight:500;color:var(--text);background:none;border:none;cursor:pointer;font-family:var(--sans);line-height:1.4;display:flex;align-items:center;gap:8px}
+.use-badge{font-family:var(--mono);font-size:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1px 7px;color:var(--muted);white-space:nowrap;flex-shrink:0}
+.use-badge.hot{background:#f0f8f4;border-color:#a0d0b4;color:var(--success)}
+.card-copy{flex-shrink:0;border:none;border-left:1px solid var(--border);background:none;padding:0 14px;font-size:12px;font-family:var(--mono);color:var(--info);cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .1s}
+.card-copy:hover{background:var(--info-bg)}
+.card-copy.ok{color:var(--success)}
+.card-copy.warn-copy{color:var(--warn);border-left-color:#f0d090}
+.card-copy.warn-copy:hover{background:var(--warn-bg)}
+.preview{display:none;border-top:1px solid var(--border)}
+.card.open .preview{display:block}
+.fields-row{display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;background:#fafaf8;border-bottom:1px solid var(--border)}
+.field-pill{display:flex;align-items:center;gap:5px;font-size:12px}
+.field-pill label{color:var(--muted);font-family:var(--mono);white-space:nowrap}
+.field-pill input{border:1px solid var(--border);border-radius:3px;padding:3px 7px;font-size:12px;font-family:var(--sans);color:var(--text);background:var(--surface);min-width:120px}
+.field-pill input:focus{outline:none;border-color:var(--border-s)}
+.field-pill input.empty-field{border-color:#f0c060;background:#fffdf0}
+.warn-bar{display:flex;align-items:center;gap:6px;padding:7px 12px;background:var(--warn-bg);border-bottom:1px solid #f0d090;font-size:12px;color:var(--warn);font-family:var(--mono)}
+.preview-text{padding:10px 12px;font-size:13px;font-family:var(--mono);line-height:1.7;white-space:pre-wrap;color:var(--muted);background:#fafaf8}
+.preview-text mark{background:#fff7cc;color:var(--text);border-radius:2px;padding:0 2px;font-style:normal}
+.preview-text mark.empty-mark{background:#ffe8c0;color:var(--warn)}
+.preview-actions{display:flex;gap:8px;padding:8px 12px;border-top:1px solid var(--border);justify-content:flex-end}
+.preview-actions button{font-size:12px;padding:4px 10px;border-radius:3px;cursor:pointer;font-family:var(--sans);border:1px solid var(--border);background:none;color:var(--muted)}
+.preview-actions button:hover{background:var(--bg);border-color:var(--border-s);color:var(--text)}
+.btn-pdel{color:var(--danger);border-color:#e0b0b0}
+.btn-pdel:hover{background:#fdf0ef!important}
+.empty{text-align:center;color:var(--muted);font-family:var(--mono);font-size:13px;padding:3rem 0}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:1rem}
+.overlay.show{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border-s);border-radius:6px;padding:1.5rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+.modal h2{font-size:13px;font-family:var(--mono);font-weight:500;letter-spacing:.05em;margin-bottom:1.25rem}
+.field{margin-bottom:.9rem}
+.field label{display:block;font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.field input,.field textarea,.field select{width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:3px;font-size:13px;font-family:var(--sans);color:var(--text);background:var(--surface)}
+.field textarea{height:200px;resize:vertical;font-family:var(--mono);line-height:1.6;font-size:12px}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--border-s)}
+.cat-row{display:flex;gap:8px}
+.cat-row select,.cat-row input{flex:1}
+#m-newcat{display:none}
+.hint{font-size:11px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+.ai-suggestion{display:none;align-items:center;gap:8px;margin-top:6px;padding:6px 10px;background:var(--info-bg);border:1px solid #b5d4f4;border-radius:4px;font-size:12px;color:var(--info);font-family:var(--mono)}
+.ai-suggestion.show{display:flex}
+.ai-suggestion span{flex:1}
+.ai-suggestion button{font-size:11px;padding:2px 8px;border-radius:3px;cursor:pointer;font-family:var(--sans);border:1px solid #85b7eb;background:none;color:var(--info)}
+.ai-suggestion button:hover{background:white}
+.ai-thinking{display:none;font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:6px;font-style:italic}
+.ai-thinking.show{display:block}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border)}
+.modal-footer button{padding:6px 14px;border-radius:3px;font-size:13px;font-family:var(--sans);cursor:pointer;border:1px solid var(--border)}
+.btn-cancel{background:none;color:var(--muted)}
+.btn-cancel:hover{background:var(--bg)}
+.btn-save{background:var(--text);color:#fff;border-color:var(--text)}
+.btn-save:hover{background:#333}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <h1>plantillas / correo</h1>
+    <span class="topbar-hint">/ para buscar · Esc para cerrar</span>
+    <button class="btn-add" onclick="openNew()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Nueva plantilla
+    </button>
+  </div>
+  <div class="body">
+    <nav class="sidebar" id="sidebar"></nav>
+    <main class="main">
+      <div class="search-row">
+        <div class="search-wrap">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input id="q" type="text" placeholder="Buscar plantilla…" oninput="render()">
+          <kbd>/</kbd>
+        </div>
+      </div>
+      <div class="result-count" id="rcount"></div>
+      <div class="grid" id="grid"></div>
+    </main>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="bgClick(event)">
+  <div class="modal">
+    <h2 id="mtitle">nueva plantilla</h2>
+    <div class="field">
+      <label>Título</label>
+      <input type="text" id="m-title" placeholder="Ej: Confirmación cambio de SEPA" oninput="onTitleInput()" onblur="suggestCategory()">
+      <div class="ai-thinking" id="ai-thinking">analizando título…</div>
+      <div class="ai-suggestion" id="ai-suggestion">
+        <span id="ai-suggestion-text"></span>
+        <button onclick="acceptSuggestion()">Usar esta</button>
+        <button onclick="dismissSuggestion()">×</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Categoría</label>
+      <div class="cat-row">
+        <select id="m-cat" onchange="catChange()"></select>
+        <input type="text" id="m-newcat" placeholder="Nueva categoría…">
+      </div>
+    </div>
+    <div class="field">
+      <label>Texto del correo</label>
+      <textarea id="m-body" placeholder="Estimado cliente,&#10;&#10;…"></textarea>
+      <div class="hint">Usa {{fecha}}, {{correo}}, {{nombre}}… para crear campos editables antes de copiar.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveModal()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY='plantillas_v3';
+const USES_KEY='plantillas_uses';
+const RAW=[
+  {id:1,cat:"Recepción",title:"Confirmación de documentación recibida",body:"Estimado cliente,\n\nLe confirmamos que hemos recibido correctamente la documentación que nos ha enviado. Hemos trasladado la información al área correspondiente para su revisión y gestión.\n\nEn cuanto tengamos una actualización sobre el proceso, nos pondremos en contacto.\n\nAgradecemos su atención y quedamos a su disposición para cualquier consulta adicional."},
+  {id:2,cat:"Recepción",title:"Información trasladada al departamento",body:"Estimado cliente,\n\nLe agradecemos por la información enviada. Le confirmamos que la hemos recibido correctamente y la hemos remitido al departamento correspondiente para su revisión y gestión.\n\nEn cuanto tengamos una respuesta o actualización, nos pondremos en contacto con usted.\n\nQuedamos a su disposición para cualquier consulta adicional."},
+  {id:3,cat:"Cambios confirmados",title:"Cambio de correo electrónico confirmado",body:"Estimado cliente,\n\nLe confirmamos que hemos realizado correctamente el cambio de su dirección de correo electrónico en nuestro sistema. A partir de ahora, todas las comunicaciones y facturas serán enviadas a la nueva dirección."},
+  {id:4,cat:"Cambios confirmados",title:"Confirmación cambio de SEPA",body:"Estimado cliente,\n\nLe informamos que hemos realizado correctamente el cambio de domiciliación que nos ha solicitado.\nA partir de este momento, todas las operaciones futuras se gestionarán utilizando la nueva cuenta registrada en nuestro sistema."},
+  {id:5,cat:"Cambios confirmados",title:"Confirmación cambio de dirección fiscal",body:"Estimado cliente,\n\nTe informamos que hemos realizado correctamente el cambio de dirección fiscal de tu empresa en nuestros registros.\n\nA partir de este momento, todas las comunicaciones y documentos oficiales reflejarán la nueva dirección fiscal."},
+  {id:6,cat:"Cambios confirmados",title:"Cambio de SEPA y correo electrónico",body:"Estimado cliente,\n\nTe informamos que hemos realizado correctamente el cambio de la domiciliación SEPA y la actualización de la dirección de correo electrónico asociada a tus contratos.\n\nA partir de este momento, los cobros se gestionarán mediante la nueva cuenta indicada y todas las comunicaciones se enviarán al nuevo correo electrónico."},
+  {id:7,cat:"Cambios confirmados",title:"Confirmación cambio de titular",body:"Estimado cliente,\n\nLe informamos de que su solicitud de cambio de titular ha sido activada con fecha {{fecha}}."},
+  {id:8,cat:"Cambios confirmados",title:"Confirmación cambio de potencia",body:"Estimado cliente,\n\nLe informamos de que su solicitud de cambio de potencia ha sido activada con fecha {{fecha}}."},
+  {id:9,cat:"Cambios confirmados",title:"Confirmación activación autoconsumo",body:"Estimado cliente,\n\nLe informamos de que su solicitud de autoconsumo ha sido activada con fecha {{fecha}}."},
+  {id:10,cat:"Cambios confirmados",title:"Confirmación de baja del suministro",body:"Estimado cliente:\n\nLe confirmamos que la baja del suministro se ha gestionado con fecha {{fecha}}.\n\nQuedamos a su disposición para cualquier aclaración adicional.\n\nUn saludo."},
+  {id:11,cat:"Cambios confirmados",title:"Actualización de datos de contacto",body:"Estimado cliente,\n\nLe informamos de que hemos actualizado correctamente los datos de contacto en nuestros sistemas.\n\nQuedamos a su disposición para cualquier aclaración adicional."},
+  {id:12,cat:"Solicitudes SEPA",title:"Consulta cambio de SEPA – envío de anexo",body:"Estimado cliente,\n\nGracias por ponerse en contacto con nosotros.\n\nPara realizar el cambio de número de cuenta, le adjuntamos el anexo correspondiente, que deberá completar, firmar y devolvernos por este mismo medio.\n\nUna vez recibamos la documentación debidamente cumplimentada, trasladaremos su solicitud al departamento encargado para que proceda con la actualización.\n\nQuedamos atentos a la recepción del anexo y a su disposición para cualquier consulta adicional.\n\nAtentamente,"},
+  {id:13,cat:"Solicitudes SEPA",title:"Cambio de SEPA y actualización de datos",body:"Estimado cliente,\n\nHemos recibido su solicitud de actualización de datos y cambio de SEPA.\n\nPara poder proceder con la modificación del SEPA, le adjuntamos el anexo correspondiente, que deberá cumplimentar y devolver debidamente firmado para su tramitación.\n\nQuedamos a su disposición para cualquier aclaración adicional."},
+  {id:14,cat:"Solicitudes SEPA",title:"SEPA – aviso de que el cambio tarda unos días",body:"Estimado cliente,\n\nLe informamos de que su solicitud de cambio de cuenta bancaria ya ha sido trasladada para su gestión.\n\nNo obstante, le indicamos que la actualización puede tardar unos días en hacerse efectiva en el sistema. Por este motivo, si hubiera alguna factura próxima a emitirse, es posible que el cargo se realice todavía en la cuenta bancaria actual y no en la nueva facilitada.\n\nEn cualquier caso, el cambio quedará aplicado en cuanto se complete la actualización.\n\nQuedamos a su disposición para cualquier consulta.\n\nReciba un cordial saludo."},
+  {id:15,cat:"Administradores de fincas",title:"Solicitar acta firmada (máx. 6 meses)",body:"Buenos días,\n\nPara poder atender su solicitud, es necesario que aporte un acta con una antigüedad no superior a 6 meses, firmada por el presidente y el administrador de la comunidad.\n\nQuedamos a la espera de la documentación."},
+  {id:16,cat:"Administradores de fincas",title:"Admin solicita cambios pero no figura como tal",body:"Estimado cliente,\n\nHemos recibido su solicitud para realizar el cambio de datos a la comunidad de propietarios.\n\nNo obstante, le informamos de que no podemos efectuar la modificación solicitada, ya que usted no figura como administrador/a de la comunidad. Para poder proceder, es imprescindible que nos remita:\n\n- Acta de la comunidad con fecha no superior a seis meses,\n- Firmada por el/la presidente/a y por el/la administrador/a vigente, o\n- Solicitar el envío de facturas desde el correo autorizado.\n\nUna vez recibida y verificada la documentación, podremos gestionar el cambio solicitado.\n\nAtentamente,"},
+  {id:17,cat:"Administradores de fincas",title:"Admin solicita info pero no figura como tal",body:"Estimado cliente,\n\nHemos recibido su solicitud para el envío de información de la comunidad de propietarios.\n\nNo obstante, le informamos de que no podemos facilitar los datos solicitados, ya que usted no figura como administrador/a de la comunidad. Para poder proceder, es imprescindible que nos remita:\n\n- Acta de la comunidad con fecha no superior a seis meses,\n- Firmada por el/la presidente/a de la comunidad y por el/la administrador/a vigente.\n\nUna vez recibida y verificada la documentación, podremos gestionar la entrega de la información solicitada."},
+  {id:18,cat:"Administradores de fincas",title:"Acta debe estar firmada por presidente y administrador",body:"Estimado cliente,\n\nGracias por enviarnos el acta de nombramiento para la actualización de datos.\n\nPara poder continuar con el proceso, es necesario que el documento esté debidamente firmado tanto por el presidente como por el administrador. Le agradeceríamos que nos remita el acta con ambas firmas a la mayor brevedad posible.\n\nQuedamos atentos a la documentación. Si tiene cualquier duda, estaremos encantados de ayudarle."},
+  {id:19,cat:"Cobros",title:"No es posible volver a girar el recibo",body:"Estimado cliente,\n\nEn relación con su solicitud, le informamos de que no es posible volver a girar el recibo por la cuenta bancaria.\n\nPara poder regularizar el pago pendiente, será necesario que realice el abono mediante transferencia bancaria:\n\nBanco: BBVA\nBeneficiario: TOTALENERGIES ELECTRICIDAD Y GAS ESPAÑA, S.A.\nIBAN: ES02 0182 3994 0802 0154 6960\nConcepto: CIF/NIF/NIE\n\nUna vez realizada la transferencia, le agradeceríamos que nos enviara el comprobante para poder confirmarlo a la mayor brevedad posible.\n\nAtentamente,"},
+  {id:20,cat:"Cobros",title:"Necesitamos justificante bancario con membrete",body:"Estimado cliente,\n\nPara poder continuar con la gestión, es necesario que nos facilite el justificante bancario emitido por su entidad, en el que aparezcan claramente el membrete del banco, así como los datos del ordenante y del beneficiario.\n\nQuedamos a la espera de recibir dicha documentación."},
+  {id:21,cat:"Cobros",title:"Disculpa – factura emitida antes del cambio de cuenta",body:"Estimado,\n\nLamentamos las molestias ocasionadas. Hemos comprobado que la factura se emitió antes de que se actualizara el número de cuenta bancaria.\n\nLe rogamos que realice el pago mediante transferencia a la siguiente cuenta y nos adjunte el justificante:\n\nBanco: BBVA\nBeneficiario: TOTALENERGIES ELECTRICIDAD Y GAS ESPAÑA, S.A.\nIBAN: ES02 0182 3994 0802 0154 6960\nConcepto: CIF/NIF/NIE\n\nLe pedimos disculpas por cualquier inconveniente.\n\nQuedamos a su disposición para cualquier aclaración adicional."},
+  {id:22,cat:"Cobros",title:"Envío de factura pendiente y datos para pago",body:"Estimado cliente,\n\nGracias por su mensaje. Adjuntamos la factura pendiente que nos solicita para su revisión y gestión del pago.\n\nPuede realizar la transferencia a la siguiente cuenta bancaria:\n\nBanco: BBVA\nBeneficiario: TOTALENERGIES ELECTRICIDAD Y GAS ESPAÑA, S.A.\nIBAN: ES02 0182 3994 0802 0154 6960\nConcepto: CIF/NIF/NIE"},
+  {id:23,cat:"Cobros",title:"Confirmación recepción de justificante de pago",body:"Estimado cliente,\n\nLe confirmamos la recepción del justificante de pago correspondiente a la factura pendiente. Hemos remitido la información al departamento correspondiente para que se registre el abono en su cuenta.\n\nAgradecemos su atención y colaboración."},
+  {id:24,cat:"Cobros",title:"Reconexión solicitada a la distribuidora (24-48h)",body:"Estimado cliente,\n\nLe informamos de que ya se ha solicitado a la distribuidora la anulación del corte del suministro. El plazo estimado para la reconexión puede ser de 24 a 48 horas.\n\nNo obstante, hemos comprobado en nuestros sistemas y la solicitud consta correctamente en estado de anulación.\n\nQuedamos a su disposición para cualquier consulta adicional."},
+  {id:25,cat:"Cambio de titular",title:"Cambio de titularidad posterior a factura emitida",body:"Estimado cliente,\n\nLe informamos que el cambio de titularidad se realizó con posterioridad a la fecha de emisión de la factura, por lo que, conforme a la normativa fiscal vigente, no es posible rehacer ni modificar una factura ya emitida correctamente en su momento.\n\nLa factura refleja de forma correcta la situación contractual existente en la fecha de emisión. Las facturas futuras, en cambio, ya se emitirán a nombre del nuevo titular.\n\nQuedamos a su disposición para cualquier aclaración adicional que necesite."},
+  {id:26,cat:"Cambio de titular",title:"Consulta tipo de titular (particular/autónomo/empresa)",body:"Estimado cliente,\n\nGracias por contactar con nosotros para solicitar información sobre el cambio de titular del suministro eléctrico.\n\nPara poder indicarle la documentación exacta y gestionar el trámite correctamente, necesitamos saber a nombre de qué tipo de titular se realizará el cambio:\n\n- Particular\n- Autónomo\n- Empresa\n\nUna vez nos confirme esta información, le detallaremos la documentación necesaria y los pasos a seguir.\n\nQuedamos a la espera de su respuesta."},
+  {id:27,cat:"Cambio de titular",title:"Cambio a particulares – derivar a atcliente@",body:"Estimado cliente,\n\nGracias por confirmarnos que el cambio de titular del suministro se realizará a nivel particular.\n\nPara poder gestionar correctamente su solicitud, debemos derivarle al servicio de Atención al Cliente de Particulares.\n\nPuede contactar con dicho departamento a través del correo atcliente@totalenergies.com.\n\nReciba un cordial saludo."},
+  {id:28,cat:"Cambio de titular",title:"Falta CIF y DNI del nuevo titular",body:"Estimado cliente:\n\nLe informamos de que hemos recibido la documentación para el cambio de titularidad. Para poder continuar con la gestión, es necesario que adjunte el CIF y el DNI del nuevo titular.\n\nQuedamos a la espera de la documentación solicitada para poder tramitar la solicitud."},
+  {id:29,cat:"Cambio de titular",title:"Solicitud de cambio de titular – envío de formularios",body:"Estimado cliente:\n\nAdjunto le enviamos los formularios necesarios para solicitar cambio de titular en distribuidora de su punto de suministro.\n\nPor favor, no olvide adjuntar la documentación que se indica en el anexo \"Cambio de titular\".\n\nLe recordamos que TotalEnergies Electricidad y Gas España, S.A.U. es empresa comercializadora de energía para clientes industriales, pequeñas empresas y autónomos."},
+  {id:30,cat:"Cambio de potencia",title:"Envío documentación cambio de potencia",body:"Estimado cliente,\n\nLe adjuntamos el anexo de cambio de potencia, que deberá cumplimentar y devolver debidamente firmado para poder tramitar su solicitud.\n\nLe recordamos la importancia de completar correctamente los campos de potencia contratada actual y potencia contratada solicitada, indicando los valores en kW.\n\nQuedamos a su disposición para cualquier aclaración adicional.\n\nAtentamente,"},
+  {id:31,cat:"Cambio de potencia",title:"Actualizar dirección fiscal – solicitar tarjeta CIF",body:"Estimado cliente:\n\nGracias por contactarnos.\n\nPara poder actualizar la dirección fiscal asociada a su contrato, es necesario que nos facilite la tarjeta CIF donde conste la información correcta.\n\nUna vez recibida la documentación, procederemos a realizar la actualización a la mayor brevedad.\n\nQuedamos atentos a su envío.\n\nAtentamente,"},
+  {id:32,cat:"Facturas y oficina virtual",title:"Acceso a la oficina virtual – correo registrado",body:"Estimado cliente,\n\nGracias por su consulta.\n\nLe informamos de que le adjuntamos el manual de registro con las instrucciones para acceder al Área de Clientes.\nEl correo electrónico que actualmente tenemos registrado como autorizado para el acceso es: {{correo}}.\n\nSi desea añadir otro correo electrónico autorizado o modificar el existente, indíquenoslo y lo gestionaremos a la mayor brevedad.\n\nQuedamos a su disposición para cualquier duda durante el proceso de registro."},
+  {id:33,cat:"Facturas y oficina virtual",title:"Envío de factura y manual de oficina virtual",body:"Estimado cliente:\n\nLe adjuntamos las facturas solicitadas para su revisión.\n\nAsimismo, incluimos el manual de registro para la oficina virtual. En caso de que tenga algún problema con el acceso, puede responder a este mismo correo y revisaremos posibles incidencias.\n\nQuedamos a su disposición para cualquier consulta adicional."},
+  {id:34,cat:"Facturas y oficina virtual",title:"Envío de una factura",body:"Estimado cliente:\n\nLe adjuntamos la factura solicitada para su revisión.\n\nQuedamos a su disposición para cualquier consulta."},
+  {id:35,cat:"Facturas y oficina virtual",title:"Envío de varias facturas",body:"Estimado cliente:\n\nLe adjuntamos las facturas solicitadas para su revisión.\n\nQuedamos a su disposición para cualquier consulta."},
+  {id:36,cat:"Facturas y oficina virtual",title:"Envío de factura solicitada y última emitida",body:"Estimado cliente:\n\nLe adjuntamos la factura solicitada, así como la última factura emitida.\n\nQuedamos a su disposición para cualquier aclaración."},
+  {id:37,cat:"Facturas y oficina virtual",title:"Cliente no puede acceder a la oficina virtual",body:"Estimado cliente,\n\nEn relación con su solicitud de acceso a nuestra nueva Oficina Virtual, le informamos de que, tras revisar nuestros sistemas, no detectamos ninguna incidencia.\n\nLe rogamos que confirme que está accediendo a través del siguiente enlace: https://clientesempresas.totalenergies.es/\n\nAsimismo, le recordamos que los correos autorizados para el acceso son: {{correo}}.\n\nEn caso de que la incidencia persista, le recomendamos cerrar la sesión, borrar las cookies y el historial de navegación, y volver a intentar el acceso.\n\nSi aun así no puede acceder, le rogamos que nos remita una captura de pantalla con el error."},
+  {id:38,cat:"Facturas y oficina virtual",title:"Registro oficina virtual + solución de incidencias",body:"Estimado cliente,\n\nGracias por su consulta.\n\nLe adjuntamos el manual de registro con las instrucciones para acceder al Área de Clientes.\nEl correo registrado como autorizado es: {{correo}}.\n\nPara acceder a la nueva Oficina Virtual: https://clientesempresas.totalenergies.es/\n\nSi tras registrarse no puede acceder, le recomendamos:\n- Verificar que accede desde el enlace indicado.\n- Cerrar la sesión y volver a intentarlo.\n- Borrar las cookies y el historial de navegación.\n\nSi la incidencia persiste, remítanos una captura de pantalla con el error.\n\nQuedamos a su disposición para cualquier duda."},
+  {id:39,cat:"Facturas y oficina virtual",title:"Habilitar envío de facturas en papel",body:"Estimado cliente,\n\nEn relación con su solicitud de recepción de facturas en formato papel, le informamos de que es posible habilitar este servicio.\n\nPara ello, le adjuntamos el anexo correspondiente, que deberá cumplimentar y devolver debidamente firmado, aceptando el coste mensual asociado a este servicio.\n\nUna vez recibamos la documentación, procederemos a activar el envío de facturación en papel."},
+  {id:40,cat:"Facturas y oficina virtual",title:"Retraso en facturación",body:"Estimado cliente,\n\nHemos verificado que la última factura aún no ha sido emitida, por lo que hemos trasladado su solicitud al departamento correspondiente para que procedan a generarla y enviársela a la mayor brevedad posible."},
+  {id:41,cat:"Facturas y oficina virtual",title:"Piden factura pero aún no se ha generado",body:"Estimado cliente,\n\nHemos recibido su solicitud y entendemos la urgencia. En este momento no nos es posible enviarle la factura, ya que aún no ha sido generada en nuestro sistema.\n\nLa factura se emitirá automáticamente una vez finalizado el proceso correspondiente.\n\nAgradecemos su comprensión y quedamos atentos ante cualquier duda adicional."},
+  {id:42,cat:"Facturas y oficina virtual",title:"Enviamos facturas disponibles (otras no están en sistema)",body:"Estimado cliente,\n\nGracias por su mensaje y por facilitarnos el detalle de los importes.\n\nLe informamos de que le adjuntamos las facturas de las que disponemos actualmente en nuestro sistema. No obstante, algunas de las facturas indicadas no nos constan.\n\nSi dispone de información adicional que nos permita localizarlas (número de factura, captura de los recibos bancarios), puede hacérnosla llegar y lo revisaremos nuevamente."},
+  {id:43,cat:"No es cliente / autenticación",title:"No es cliente – derivar a B2C o lubricantes",body:"Estimado cliente,\n\nLe informamos de que la sociedad a la que se ha dirigido es TotalEnergies Electricidad y Gas España, S.A.U., empresa comercializadora de energía para clientes industriales. Tras revisar nuestros sistemas, le confirmamos que no constan datos suyos en nuestra base de datos.\n\nSi su consulta está relacionada con TotalEnergies Clientes, S.A.U. (hogares y pequeños negocios), puede contactar a través del correo atcliente@totalenergies.com.\n\nSi corresponde a TotalEnergies Marketing España, S.A.U. (lubricantes), puede escribir a atencion.cliente@totalenergies.com."},
+  {id:44,cat:"No es cliente / autenticación",title:"Autenticación – solicitar CIF/nº contrato/nº suministro",body:"Estimado cliente,\n\nGracias por ponerse en contacto con nosotros.\n\nPara poder revisar su consulta y acceder a la información correspondiente, necesitamos que nos facilite alguno de los siguientes datos:\n\n- CIF\n- Número de contrato\n- Número de suministro\n\nCon cualquiera de estos datos podremos localizar su expediente y ayudarle de forma más ágil.\n\nQuedamos atentos a su respuesta."},
+  {id:45,cat:"No es cliente / autenticación",title:"El cliente envía correo vacío",body:"Estimado cliente,\n\nHemos recibido su correo electrónico, pero hemos comprobado que el mensaje no contiene ningún texto ni documentación adjunta.\n\n¿Podría confirmarnos cuál es su consulta o reenviarnos la información que desea trasladarnos? Estaremos encantados de ayudarle en cuanto la recibamos.\n\nQuedamos atentos a su respuesta.\n\nReciba un cordial saludo."},
+  {id:46,cat:"Otras consultas",title:"No pasa política de seguridad (correo no autorizado)",body:"Estimado cliente,\n\nGracias por ponerse en contacto con nosotros.\nPor motivos de seguridad y confidencialidad, no podemos procesar su solicitud desde esta dirección de correo electrónico, ya que no coincide con la cuenta registrada en nuestro sistema.\n\nPara poder asistirle, le agradeceríamos que:\n\n- Nos escriba desde la dirección de correo electrónico autorizada que figura en nuestros registros, o\n- Nos facilite una autorización firmada por la empresa.\n\nAgradecemos su comprensión y colaboración."},
+  {id:47,cat:"Otras consultas",title:"Respuesta para subagentes – Portal de Colaborador",body:"Buenos días,\n\nComo subagente de TotalEnergies debe abrir peticiones y reclamaciones desde nuestro Portal de Colaborador."},
+  {id:48,cat:"Otras consultas",title:"Comunicación corte de suministro (LOPD)",body:"Estimado Cliente,\n\nAdjunto le enviamos notificación remitida por Distribuidora con información importante sobre su punto de suministro {{CUPS}}.\n\nGracias por confiar en TotalEnergies,"},
+  {id:49,cat:"Otras consultas",title:"Cliente nuevo solicita oferta",body:"Estimado cliente,\n\nGracias por ponerse en contacto con nosotros y por su interés en recibir una oferta energética.\n\nHemos recibido su solicitud y la hemos trasladado al departamento correspondiente, que se encargará de analizar su caso y preparar una propuesta adaptada a sus necesidades.\nUno de nuestros especialistas se pondrá en contacto con usted a la mayor brevedad posible."},
+  {id:50,cat:"Otras consultas",title:"Cliente consulta estado de una incidencia",body:"Estimado cliente,\n\nGracias por ponerse en contacto con nosotros.\n\nLe informamos de que la solicitud que nos indica continúa en proceso de tramitación. Nuestro equipo responsable sigue trabajando en su gestión y le mantendremos informado en cuanto se produzca cualquier novedad.\n\nAgradecemos su paciencia y comprensión.\n\nAtentamente,"},
+  {id:51,cat:"Otras consultas",title:"Desglose SAS (Servicios de Ajuste del Sistema)",body:"Estimado cliente,\n\nLe informamos de que el importe indicado en su factura en concepto de Servicios de Ajuste del Sistema (SAS) corresponde a un coste regulado del sistema eléctrico gestionado por Red Eléctrica de España, necesario para garantizar el equilibrio entre la oferta y la demanda de energía.\n\nEstos costes han superado el valor de referencia establecido en las Condiciones Generales de su contrato. Por este motivo, se ha emitido una factura extraordinaria, cuyo importe se calcula en base al consumo realizado en dicho periodo y la diferencia entre el coste real y el previsto contractualmente.\n\nEste concepto no corresponde a un error ni a un cambio de tarifa, sino a un ajuste puntual regulado y ajeno a la comercializadora.\n\nQuedamos a su disposición para cualquier aclaración adicional."},
+  {id:52,cat:"Otras consultas",title:"Cambio de denominación social – solicitar tarjeta CIF",body:"Estimado cliente,\n\nPara poder proceder con la modificación de la denominación social, es necesario que aporte la tarjeta CIF actualizada.\n\nQuedamos a su disposición para cualquier aclaración adicional."}
+];
+
+function load(){try{const s=localStorage.getItem(KEY);if(s)return JSON.parse(s);}catch(e){}return RAW.map(t=>({...t}));}
+function loadUses(){try{const s=localStorage.getItem(USES_KEY);if(s)return JSON.parse(s);}catch(e){}return {};}
+function saveUses(){try{localStorage.setItem(USES_KEY,JSON.stringify(uses));}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){}}
+
+let data=load();
+let uses=loadUses();
+let activeCat='Todas';
+let openId=null;
+let editingId=null;
+const fieldVals={};
+
+function cats(){return['Todas',...new Set(data.map(t=>t.cat))];}
+function nextId(){return data.length?Math.max(...data.map(t=>t.id))+1:1;}
+function getFields(body){const m=body.match(/\{\{([^}]+)\}\}/g);if(!m)return[];return[...new Set(m.map(x=>x.slice(2,-2)))];}
+
+function hasEmptyFields(id,body){
+  const fields=getFields(body);
+  return fields.some(f=>!(fieldVals[id]&&fieldVals[id][f]));
+}
+
+function resolveBody(id,body){
+  const fields=getFields(body);
+  if(!fields.length)return body;
+  let out=body;
+  fields.forEach(f=>{const val=(fieldVals[id]&&fieldVals[id][f])||'';out=out.replaceAll('{{'+f+'}}',val||'{{'+f+'}}');});
+  return out;
+}
+
+function renderSidebar(){
+  const counts={};
+  data.forEach(t=>{counts[t.cat]=(counts[t.cat]||0)+1;});
+  const sb=document.getElementById('sidebar');
+  sb.innerHTML='<div class="sb-label">Categorías</div>';
+  cats().forEach(c=>{
+    const b=document.createElement('button');
+    b.className='sb-item'+(c===activeCat?' active':'');
+    const n=c==='Todas'?data.length:(counts[c]||0);
+    b.innerHTML='<span style="flex:1;text-align:left">'+esc(c)+'</span><span class="sb-count">'+n+'</span>';
+    b.onclick=()=>{activeCat=c;openId=null;renderSidebar();render();};
+    sb.appendChild(b);
+  });
+}
+
+function useBadge(id){
+  const n=uses[id]||0;
+  if(n===0)return'';
+  const hot=n>=5;
+  return'<span class="use-badge'+(hot?' hot':'')+'" title="Veces copiada">×'+n+'</span>';
+}
+
+function render(){
+  const q=(document.getElementById('q').value||'').trim().toLowerCase();
+  const filtered=data.filter(t=>{
+    const mc=activeCat==='Todas'||t.cat===activeCat;
+    const mq=!q||t.title.toLowerCase().includes(q)||t.body.toLowerCase().includes(q)||t.cat.toLowerCase().includes(q);
+    return mc&&mq;
+  });
+  document.getElementById('rcount').textContent=filtered.length+' plantilla'+(filtered.length!==1?'s':'');
+  const el=document.getElementById('grid');
+  if(!filtered.length){el.innerHTML='<p class="empty">— sin resultados —</p>';return;}
+  el.innerHTML=filtered.map(t=>{
+    const isOpen=openId===t.id;
+    const fields=getFields(t.body);
+    const emptyFields=fields.filter(f=>!(fieldVals[t.id]&&fieldVals[t.id][f]));
+    const hasEmpty=emptyFields.length>0;
+    const copyClass='card-copy'+(hasEmpty?' warn-copy':'');
+
+    let previewHtml='';
+    if(isOpen){
+      let fieldsHtml='';
+      if(fields.length){
+        fieldsHtml='<div class="fields-row">'+fields.map(f=>{
+          const val=(fieldVals[t.id]&&fieldVals[t.id][f])||'';
+          const isEmpty=!val;
+          return'<div class="field-pill"><label>'+esc(f)+'</label><input type="text" value="'+esc(val)+'"'+(isEmpty?' class="empty-field"':'')+' placeholder="'+esc(f)+'…" oninput="setField('+t.id+',\''+f+'\',this.value)"></div>';
+        }).join('')+'</div>';
+      }
+      const warnBar=hasEmpty?'<div class="warn-bar"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Rellena los campos en naranja antes de copiar</div>':'';
+      let preview=esc(t.body);
+      fields.forEach(f=>{
+        const val=(fieldVals[t.id]&&fieldVals[t.id][f])||'';
+        const isEmpty=!val;
+        const mark='<mark class="'+(isEmpty?'empty-mark':'')+'">'+(val?esc(val):esc('{{'+f+'}}'))+'</mark>';
+        preview=preview.replaceAll(esc('{{'+f+'}}'),mark);
+      });
+      previewHtml='<div class="preview">'+warnBar+fieldsHtml+'<div class="preview-text" id="pt-'+t.id+'">'+preview+'</div><div class="preview-actions"><button class="btn-pedit" onclick="openEdit('+t.id+')">Editar plantilla</button><button class="btn-pdel" onclick="del('+t.id+')">Eliminar</button></div></div>';
+    }
+
+    const copyIcon=hasEmpty
+      ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+      : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+
+    return'<div class="card'+(isOpen?' open':'')+'"><div class="card-top"><button class="card-title-btn" onclick="toggle('+t.id+')"><span style="flex:1;text-align:left">'+esc(t.title)+'</span>'+useBadge(t.id)+'</button><button class="'+copyClass+'" id="cp-'+t.id+'" onclick="copyCard('+t.id+',event)" title="'+(hasEmpty?'Hay campos sin rellenar':'Copiar texto')+'">'+copyIcon+(hasEmpty?' Faltan campos':' Copiar')+'</button></div>'+previewHtml+'</div>';
+  }).join('');
+}
+
+function toggle(id){openId=openId===id?null:id;render();}
+
+function setField(id,field,val){
+  if(!fieldVals[id])fieldVals[id]={};
+  fieldVals[id][field]=val;
+  // update preview live
+  const pt=document.getElementById('pt-'+id);
+  if(pt){
+    const t=data.find(x=>x.id===id);
+    if(t){
+      const fields=getFields(t.body);
+      let preview=esc(t.body);
+      fields.forEach(f=>{
+        const v=(fieldVals[id]&&fieldVals[id][f])||'';
+        preview=preview.replaceAll(esc('{{'+f+'}}'),'<mark class="'+(v?'':'empty-mark')+'">'+(v?esc(v):esc('{{'+f+'}}'))+'</mark>');
+      });
+      pt.innerHTML=preview;
+    }
+  }
+  // update copy button state
+  const btn=document.getElementById('cp-'+id);
+  if(btn){
+    const t=data.find(x=>x.id===id);
+    if(t){
+      const empty=hasEmptyFields(id,t.body);
+      btn.className='card-copy'+(empty?' warn-copy':'');
+      btn.title=empty?'Hay campos sin rellenar':'Copiar texto';
+      btn.innerHTML=empty
+        ?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Faltan campos'
+        :'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar';
+      // update warn bar
+      const card=btn.closest('.card');
+      const wb=card&&card.querySelector('.warn-bar');
+      if(wb)wb.style.display=empty?'flex':'none';
+      // update field inputs border
+      if(card){
+        card.querySelectorAll('.field-pill input').forEach(inp=>{
+          inp.className=inp.value?'':'empty-field';
+        });
+      }
+    }
+  }
+}
+
+function copyCard(id,e){
+  e.stopPropagation();
+  const t=data.find(x=>x.id===id);
+  if(!t)return;
+  if(hasEmptyFields(id,t.body)){
+    // open card to show fields if not open
+    if(openId!==id){openId=id;render();return;}
+    return;
+  }
+  const text=resolveBody(id,t.body);
+  navigator.clipboard.writeText(text).then(()=>{
+    uses[id]=(uses[id]||0)+1;
+    saveUses();
+    const btn=document.getElementById('cp-'+id);
+    if(!btn)return;
+    const prev=btn.innerHTML;
+    btn.classList.add('ok');
+    btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copiado';
+    setTimeout(()=>{
+      btn.classList.remove('ok');
+      btn.innerHTML=prev.replace('Copiado','Copiar');
+      // refresh badge
+      const titleBtn=btn.closest('.card')&&btn.closest('.card').querySelector('.card-title-btn');
+      if(titleBtn){
+        const badge=titleBtn.querySelector('.use-badge');
+        const n=uses[id]||0;
+        if(badge){badge.textContent='×'+n;badge.className='use-badge'+(n>=5?' hot':'');}
+        else{titleBtn.insertAdjacentHTML('beforeend','<span class="use-badge'+(n>=5?' hot':'')+'" title="Veces copiada">×'+n+'</span>');}
+      }
+    },2000);
+  });
+}
+
+function del(id){
+  if(!confirm('¿Eliminar esta plantilla?'))return;
+  data=data.filter(t=>t.id!==id);
+  if(openId===id)openId=null;
+  save();renderSidebar();render();
+}
+
+function openNew(){editingId=null;showModal(null);}
+function openEdit(id){editingId=id;showModal(data.find(t=>t.id===id));}
+
+function showModal(t){
+  document.getElementById('mtitle').textContent=t?'editar plantilla':'nueva plantilla';
+  document.getElementById('m-title').value=t?t.title:'';
+  document.getElementById('m-body').value=t?t.body:'';
+  const sel=document.getElementById('m-cat');
+  const cs=[...new Set(data.map(x=>x.cat))];
+  sel.innerHTML=cs.map(c=>'<option value="'+esc(c)+'"'+(t&&t.cat===c?' selected':'')+'>'+esc(c)+'</option>').join('')+'<option value="__nueva__">+ Nueva categoría…</option>';
+  document.getElementById('m-newcat').style.display='none';
+  document.getElementById('m-newcat').value='';
+  document.getElementById('overlay').classList.add('show');
+  setTimeout(()=>document.getElementById('m-title').focus(),50);
+}
+function closeModal(){document.getElementById('overlay').classList.remove('show');}
+function bgClick(e){if(e.target===document.getElementById('overlay'))closeModal();}
+function catChange(){document.getElementById('m-newcat').style.display=document.getElementById('m-cat').value==='__nueva__'?'block':'none';}
+function saveModal(){
+  const title=document.getElementById('m-title').value.trim();
+  const body=document.getElementById('m-body').value.trim();
+  let cat=document.getElementById('m-cat').value;
+  if(cat==='__nueva__')cat=document.getElementById('m-newcat').value.trim();
+  if(!title||!body||!cat){alert('Rellena todos los campos.');return;}
+  if(editingId!==null){const i=data.findIndex(t=>t.id===editingId);if(i!==-1)data[i]={id:editingId,cat,title,body};}
+  else{data.push({id:nextId(),cat,title,body});}
+  save();closeModal();renderSidebar();render();
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// AI category suggestion
+let suggestTimer=null;
+let lastSuggestedTitle='';
+let suggestedCat='';
+
+function onTitleInput(){
+  clearTimeout(suggestTimer);
+  hideSuggestion();
+}
+
+function suggestCategory(){
+  const title=document.getElementById('m-title').value.trim();
+  if(!title||title===lastSuggestedTitle||editingId!==null)return;
+  // only trigger for new templates
+  clearTimeout(suggestTimer);
+  suggestTimer=setTimeout(()=>doSuggest(title),300);
+}
+
+async function doSuggest(title){
+  if(!title)return;
+  lastSuggestedTitle=title;
+  const existingCats=[...new Set(data.map(x=>x.cat))];
+  const thinking=document.getElementById('ai-thinking');
+  thinking.classList.add('show');
+  hideSuggestion();
+  try{
+    const prompt=`Eres un clasificador de plantillas de correo para atención al cliente de una comercializadora de energía.\n\nCategorías existentes:\n${existingCats.map(c=>'- '+c).join('\n')}\n\nTítulo de la nueva plantilla: "${title}"\n\nResponde SOLO con el nombre exacto de la categoría más apropiada de la lista, sin explicaciones. Si ninguna encaja bien, responde con el nombre de una categoría nueva concisa en español.`;
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:30,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const json=await res.json();
+    const cat=(json.content&&json.content[0]&&json.content[0].text||'').trim();
+    if(cat){
+      suggestedCat=cat;
+      document.getElementById('ai-suggestion-text').textContent='Categoría sugerida: '+cat;
+      document.getElementById('ai-suggestion').classList.add('show');
+    }
+  }catch(e){/* silent */}
+  finally{thinking.classList.remove('show');}
+}
+
+function acceptSuggestion(){
+  if(!suggestedCat)return;
+  const sel=document.getElementById('m-cat');
+  // check if cat already exists in select
+  const existing=[...sel.options].find(o=>o.value===suggestedCat);
+  if(existing){
+    sel.value=suggestedCat;
+    document.getElementById('m-newcat').style.display='none';
+  } else {
+    // add it as a new option before the "+ Nueva" option
+    const newOpt=document.createElement('option');
+    newOpt.value=suggestedCat;
+    newOpt.textContent=suggestedCat;
+    sel.insertBefore(newOpt,sel.options[sel.options.length-1]);
+    sel.value=suggestedCat;
+    document.getElementById('m-newcat').style.display='none';
+  }
+  hideSuggestion();
+}
+
+function dismissSuggestion(){hideSuggestion();}
+function hideSuggestion(){
+  document.getElementById('ai-suggestion').classList.remove('show');
+  document.getElementById('ai-thinking').classList.remove('show');
+}
+
+document.addEventListener('keydown',e=>{
+  const overlay=document.getElementById('overlay');
+  if(e.key==='Escape'){
+    if(overlay.classList.contains('show'))closeModal();
+    return;
+  }
+  // "/" focuses search unless typing in an input/textarea
+  if(e.key==='/'&&!overlay.classList.contains('show')){
+    const tag=document.activeElement.tagName;
+    if(tag!=='INPUT'&&tag!=='TEXTAREA'&&tag!=='SELECT'){
+      e.preventDefault();
+      document.getElementById('q').focus();
+      document.getElementById('q').select();
+    }
+  }
+});
+
+renderSidebar();render();
+</script>
+</body>
+</html>
