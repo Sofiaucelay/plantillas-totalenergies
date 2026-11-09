@@ -101,6 +101,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
   <div class="topbar">
     <h1>plantillas / correo</h1>
     <span class="topbar-hint">/ para buscar · Esc para cerrar</span>
+    <button class="btn-add" onclick="exportData()" title="Descargar copia de tus plantillas">Exportar</button>
+    <button class="btn-add" onclick="document.getElementById('import-file').click()" title="Cargar una copia exportada">Importar</button>
+    <input type="file" id="import-file" accept=".json,application/json" style="display:none" onchange="importData(event)">
     <button class="btn-add" onclick="openNew()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
       Nueva plantilla
@@ -513,6 +516,28 @@ document.addEventListener('keydown',e=>{
     }
   }
 });
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='mis-plantillas-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();a.remove();
+}
+function importData(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const arr=JSON.parse(r.result);
+      if(!Array.isArray(arr)||!arr.every(t=>t&&t.title&&t.body))throw 0;
+      if(!confirm('Se cargarán '+arr.length+' plantillas y sustituirán a las actuales en este navegador. ¿Continuar?'))return;
+      data=arr;save();renderSidebar();render();
+    }catch(err){alert('El archivo no es una copia válida de plantillas.');}
+    e.target.value='';
+  };
+  r.readAsText(f);
+}
 
 renderSidebar();render();
 </script>
